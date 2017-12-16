@@ -6,7 +6,7 @@
 /*   By: cwartell <cwartell@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/11/27 19:14:44 by cwartell          #+#    #+#             */
-/*   Updated: 2017/12/13 23:45:51 by cwartell         ###   ########.fr       */
+/*   Updated: 2017/12/15 15:48:00 by cwartell         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,9 +66,12 @@ int		get_next_line(const int fd, char **line)
 	tmp = (char*)malloc(sizeof(char) * BUFF_SIZE + 1);
 	if (fd < 0 || (read(fd, tmp, 0) < 0))
 		return (-1);
+	// 	free(head);
 	if (head != NULL)
-		free(head);
-	head = (t_line*)malloc(sizeof(*head));
+	{
+		head = (t_line*)malloc(sizeof(*head));
+		printf("i created a new structure!\n");
+	}
 	newline = 0;
 	while ((j = read(fd, tmp, BUFF_SIZE)) > 0 && (!newline))
 	{
