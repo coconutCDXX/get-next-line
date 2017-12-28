@@ -6,7 +6,7 @@
 /*   By: cwartell <cwartell@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/11/27 19:14:44 by cwartell          #+#    #+#             */
-/*   Updated: 2017/12/26 23:02:24 by cwartell         ###   ########.fr       */
+/*   Updated: 2017/12/27 19:14:23 by cwartell         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -465,68 +465,107 @@
 // 		return 1;
 // }
 
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   get_next_line.c                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: cwartell <cwartell@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2017/11/27 19:14:44 by cwartell          #+#    #+#             */
+/*   Updated: 2017/12/27 19:12:00 by cwartell         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "get_next_line.h"
 
 int		get_next_line(const int fd, char **line)
 {
-	char	*reed;
-	int		j;
+	char		reed[BUFF_SIZE + 1];
+	int			j;
 	static char	*buffer;
+	static char	*save;
 
-	reed = (char*)malloc(sizeof(char) * BUFF_SIZE + 1);
 	if (fd < 0 || (read(fd, reed, 0) < 0))
 		return (-1);
 	bzero(reed, BUFF_SIZE + 1);
 	while ((j = read(fd, reed, BUFF_SIZE)) > 0)
 	{
-		//reed[BUFF_SIZE] = '\0';
 		if (buffer != NULL)
-			buffer = ft_strjoin(buffer, reed, fd);
+		{
+			save = buffer;
+			buffer = ft_strjoin(buffer, reed, fd, save);
+		}
 		else
 		{
 			buffer = (char*)malloc(sizeof(char) * BUFF_SIZE + 1);
-			memmove(buffer, reed, BUFF_SIZE);
+			memmove(buffer, reed, BUFF_SIZE + 1);
 			buffer[BUFF_SIZE] = '\0';
 		}
 		if (strchr(reed, '\n') != NULL)
-			break;
-		bzero(reed, BUFF_SIZE + 1);
+			break ;
+		save = buffer;
 	}
 	if ((j > 0 || buffer != NULL) && buffer[0] != '\0')
 	{
-		buffer = save2_line(buffer, line, j);
-		return 1;
+		save = buffer;
+		buffer = save2_line(buffer, line, j, save);
+		return (1);
 	}
 	return (j != 0 ? -1 : 0);
 }
 
-char	*ft_strjoin(char const *s1, char const *s2,int fd)
+char	*ft_strjoin(char const *s1, char const *s2, int fd, char *save)
 {
 	size_t	st;
 	size_t	end;
-	size_t	i;
-	size_t	j;
 	char	*p;
 
 	if (!s1 || !s2)
 		return (NULL);
 	st = strlen(s1);
 	end = strlen(s2);
-	i = -1;
-	j = -1;
 	if (!(p = (char*)malloc(sizeof(*p) * (st + end + 1))))
 		return (NULL);
-	while (*(s1 + ++i))
-		*(p + i) = *(s1 + i);
-	while (*(s2 + ++j))
-		*(p + i++) = *(s2 + j);
-	p[i] = '\0';
+	memmove(p, s1, st);
+	memmove(p + st, s2, end);
+	p[st + end + 1] = '\0';
 	if (fd != 0)
 	{
-		bzero((void*)s1, st);
-		//free((void*)s1);
+		free(save);
+		save = p;
 	}
 	return (p);
+}
+
+char	*save2_line(char *buffer, char **line, int j, char *save)
+{
+	int		a;
+	char	*new;
+
+	a = 0;
+
+	while (buffer[a] != '\n' && buffer[a] != '\0')
+	a++;
+	if ((buffer[a] == '\0' || j == 0) && buffer[a + 1] == '\0')
+	{
+		line[0] = (char*)malloc(sizeof(char) * a + 1);
+		memmove(line[0], buffer, a);
+		line[0][a] = '\0';
+		bzero((void*)buffer, a + 1);
+		return (NULL);
+	}
+	else
+	{
+		line[0] = (char*)malloc(sizeof(char) * a + 1);
+		memmove(line[0], buffer, a);
+		line[0][a] = '\0';
+		new = (char*)malloc(sizeof(char) * (strlen(buffer) - a) + 1);
+		memmove(new, buffer + a + 1, strlen(buffer) - a);
+		bzero((void*)buffer, a + 1);
+		free(save);
+		return (new);
+	}
 }
 
 void	ft_bzero(void *s, size_t n)
@@ -538,30 +577,4 @@ void	ft_bzero(void *s, size_t n)
 	i = 0;
 	while (i < n)
 		*(p + i++) = 0;
-}
-
-char	*save2_line(char *buffer, char **line, int j)
-{
-	int		a;
-
-	a = 0;
-	while (buffer[a] != '\n' && buffer[a] != '\0')
-		a++;
-	if ((buffer[a] == '\0' || j == 0) && buffer[a + 1] == '\0')
-	{
-		line[0] = (char*)malloc(sizeof(char) * a + 1);
-		memmove(line[0], buffer, a);
-		line[0][a] = '\0';
-		//bzero((void*)buffer, a);
-		//free(buffer);
-		return (NULL);
-	}
-	else
-	{
-		line[0] = (char*)malloc(sizeof(char) * a + 1);
-		memmove(line[0], buffer, a);
-		line[0][a] = '\0';
-		bzero((void*)buffer, a);
-		return (buffer + a + 1);
-	}
 }
